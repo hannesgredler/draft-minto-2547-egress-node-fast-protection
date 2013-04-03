@@ -65,11 +65,25 @@
       </address>
     </author>
 
-    <author>
-      <organization>Juniper Networks</organization>
-    </author>
+	    <author fullname="Bruno Decraene" initials="B" surname="Decraene">
+      <organization>France Telecom - Orange</organization>
 
-    <date day="22" month="oct" year="2012"/>
+      <address>
+        <postal>
+          <street>38 rue du General Leclerc</street>
+
+          <city>Issy Moulineaux cedex 9</city>
+
+          <code>92794</code>
+
+          <country>France</country>
+        </postal>
+
+        <email>bruno.decraene@orange.com</email>
+      </address>
+    </author>
+	
+    <date year="2012"/>
 
     <area>Routing</area>
 
@@ -88,8 +102,8 @@
     <abstract>
       <t>This document specifies a mechanism for protecting RFC2547 based VPN
       service against egress node failure. The mechanism enables local repair
-      to be performed immediately upon a egress node failure. In particular,
-      the router at point of local repair (PLR) can redirect VPN traffic to a
+      to be performed immediately upon a egress PE failure. In particular, the
+      router at point of local repair (PLR) can redirect VPN traffic to a
       protector to repair in the order of tens of milliseconds, achieving fast
       protection that is comparable to MPLS fast reroute.</t>
     </abstract>
@@ -97,18 +111,18 @@
 
   <middle>
     <section title="Introduction">
-      <t>This document specifies a mechanism for protecting RFC2547 based VPN
+      <t>This document specifies a mechanism for protecting RFC 2547 based VPN
       against egress PE failure. The procedures in this document are relevant
       only when a VPN site is multi-homed to two or more PEs. This is designed
-      on the basis of MPLS context specific label switching [RFC 5331].
-      Fast-protection refers to the ability to provide local repair upon a
-      failure in the order of tens of milliseconds, which is comparable to
-      MPLS fast-reroute [RFC 4090]. This is achieved by establishing local
-      protection as close to a failure as possible. Compared with the existing
-      global repair mechanisms that rely on control plane convergence, these
-      procedures can provide faster restoration for VPN traffic. However, they
-      are intended to complement the global repair mechanisms, rather than
-      replacing them in any way.</t>
+      on the basis of MPLS context specific label switching <xref
+      target="RFC5331"/>. Fast-protection refers to the ability to provide
+      local repair upon a failure in the order of tens of milliseconds, which
+      is comparable to MPLS fast-reroute <xref target="RFC4090"/>. This is
+      achieved by establishing local protection as close to a failure as
+      possible. Compared with the existing global repair mechanisms that rely
+      on control plane convergence, these procedures can provide faster
+      restoration for VPN traffic. However, they are intended to complement
+      the global repair mechanisms, rather than replacing them in any way.</t>
     </section>
 
     <section title="Specification of Requirements">
@@ -145,8 +159,13 @@
       table is per is populated with VPN labels advertised by the
       protected-PE.</t>
 
-      <t>Context node: A stub router advertised into IGP by protected PE for a
-      context-identifier.</t>
+      <t>Context label: A label in protector provides context-specific label
+      forwarding.</t>
+
+      <t>Context VPN table: A layer 3 FIB with alternate nexthop per context
+      per site.</t>
+
+      <t>PLR: Point of Local Repair.</t>
     </section>
 
     <section title="Reference topology">
@@ -154,8 +173,6 @@
       roles and solution.</t>
 
       <figure align="center" anchor="Topology-1">
-        <preamble/>
-
         <artwork align="center">
 
 
@@ -176,19 +193,17 @@
                   .                     .
                   .......................
            </artwork>
-
-        <postamble/>
       </figure>
 
       <t>In Topology-1 two VPNs red and blue with two sites multihomed with
       PEs. Let assume blue and red VPN site2 prefixes required egress
       protection in case of PE5 goes down. PE5 is protected PE for site2
-      prefixes for both VPN. PE4 is alternate PE for red site2 prefixes. PE6
-      is alternate PE for blue site2 prefixes. For PE4 could act as protector
-      for red VPN site2 and PE6 could acts as protector for blue VPN site2.
-      This model is co-located protector model. RR could act as protector for
-      both red and blue VPN site2. This is Centralized protector model (A PE
-      protecting set of VPNs and not connected to any VPN site).</t>
+      prefixes for both VPN. PE4 is an alternative egress PE for red site2 prefixes. PE6
+      is an alternative egress PE for blue site2 prefixes. PE4 could act as protector for
+      red VPN site2 and PE6 could acts as protector for blue VPN site2. This
+      model is called co-located protector model. Alternatively, RR could act as protector for both
+      red and blue VPN site2. This is called centralized protector model (A node
+      protecting set of VPNs and not connected to any of those VPN site).</t>
 
       <figure align="center" anchor="Topologgy-2">
         <artwork> 
@@ -222,42 +237,41 @@
     <section anchor="theory" title="Theory of Operation">
       <t>The Egress PEs attached to multi-homed site export VPN prefixes with
       different route distinguisher, different nexthop but with same route
-      target. The other PEs attached to other sites with same VPN import these
-      route into VRF creates more than one path to multi-homed sites. When one
-      egress PE goes down all VPN traffic towards the multihomed site moved to
-      alternate egress PEs attached to the multi-homed site and this is done
-      by ingress PE. The VPN traffic going via failed PE get dropped in
-      penultimate hop router until ingress PE reroute VPN traffic. Even though
-      connectivity of multi-homed site is not bound to an egress PE the
-      transport LSP bind to egress PE. As result of down transport LSP VPN
-      traffic getting dropped in P router. This document specifies a mechanism
-      that repair VPN traffic at point of failure (typically a P router which
-      penultimate hop of the transport LSP) and still keep P router unaware of
-      the VPN information with the help of protector (a new role). The PLR
-      (point of local repair) send VPN traffic to protector through bypass LSP
+      target. The ingress PEs attached to other sites with same VPN import these
+      route into VRF creating more than one path to multi-homed sites. When
+      one egress PE goes down all VPN traffic towards the multihomed site
+      moves to alternate egress PEs attached to the multi-homed site and this
+      is done by ingress PE. The VPN traffic going through failed PE get
+      dropped in penultimate hop router until ingress PE reroute the VPN
+      traffic. Even though connectivity of multi-homed site is not bound to an
+      egress PE the transport LSP bind to that egress PE. As result of down
+      transport LSP VPN traffic gets dropped in P router. This document
+      specifies a mechanism that repair VPN traffic at point of failure
+      (typically a P router which penultimate hop of the transport LSP) and
+      still keep P router unaware of the VPN information with the help of a
+      protector. The PLR send VPN traffic to protector through bypass LSP
       incase of egress PE failure. This protector send VPN traffic received
-      from PLR to the alternative egress PE until the ingress reroute traffic
+      from PLR to the alternative egress PE until the ingress PE reroute traffic
       to alternate egress PE.</t>
 
       <section title="Protector and Protection Models">
-        <t>Protector, is a new role for the egress PE failure local repair.
-        This protector role could be played by a PE(alternate egress PE) or
-        any other nodes which participates in VPN control plane for VPN
-        prefixes that required egress node protection. Hence, there are two
-        protection models based on the location and role of a protector.</t>
+        <t>Protector, is a new role, could be played by the alternate egress
+        PE, another PE or any other nodes which participates in VPN control plane for VPN
+        prefixes that requires egress node protection.</t>
+	    <t>We defined three types of protector (co-located, centralized, hybrid) depending
+		on the protector having direct links to the backup site for all VPNs, non, or some.
+		A network MAY use either protection model or a combination depending on requirements and network topology.</t>
 
         <section title="Co-located protector">
-          <t>In this model, the protector is a alternate egress PE for a
-          protected prefix. It is co-located with the alternate PE for the
-          protected prefix, and it has a direct connection to the multi-homed
-          site that originate the protected prefix. In the event of an egress
-          node failure, the protector receives traffic from the PLR, and sends
-          the traffic to the multi-homed site. In the topology-1 PE4 could act
-          as protector for red VPN site2 and PE6 could acts as protector for
-          blue VPN site2. This model is co-located protector model. RR could
-          act as protector for both red and blue VPN site2. This is
-          Centralized protector model (A PE protecting set of VPNs and not
-          connected to any VPN site).</t>
+          <t>In this model, protector role is played by the alternate egress PE
+          for a protected prefix. It is co-located with the alternate PE for
+          the protected prefix, and it has a direct connection to the
+          multi-homed site that originate the protected prefix. In the event
+          of an egress node failure, the protector receives traffic from the
+          PLR, and sends VPN traffic to the multi-homed site. In the <xref
+          pageno="false" target="Topology-1"/> PE4 could act as co-located
+          protector for red VPN site2 and PE6 could acts as co-located
+          protector for blue VPN site2. </t>
 
           <t>A slight variant of this model is, protector is not alternate PE
           for a protected prefix but has same VRF. In the topology-2 either
@@ -267,27 +281,45 @@
 
         <section title="Centralized protector">
           <t>In this model, the protector serves as a centralized protector
-          MAY NOT have a direct connection to multi-homed site. This model can
-          be played by existing PEs or other PEs. In the event of an egress PE
-          failure, protector MUST send the traffic to a alternate egress PE
-          with VPN label advertised alternate egress PE for the prefix which
-          in turn sends the traffic to the multi-homed site. In the topology-1
-          RR could act as protector for both red and blue VPN site2. This is
-          Centralized protector model (A PE protecting set of VPNs and not
-          connected to any VPN site).</t>
+          and does not have a direct connection to multi-homed site. This model can
+          be played by existing PEs or a dedicated protector. In the event of
+          an egress PE failure, protector MUST forwards the traffic to an
+          alternate egress PE with the VPN label advertised by the alternate egress PE
+          for the prefix which in turn forwards the traffic to the multi-homed
+          site. In the topology-1 RR could act as protector for both red and
+          blue VPN site2. This is centralized protector model (A PE protecting
+          set of VPNs and not connected to any VPN site).</t>
 
           <t>A network MAY use either protection model or a combination of
           both, depending on requirements.</t>
         </section>
+		
+		      <section title="Hybrid protector">
+          <t>In this model, the protector is a co-located protector for some VPNs
+		  (for which the multi-homed site has a direct connection with the hybrid protector)
+		  and a centralized protector for others VPNs.</t>
+
+        </section>
+	
       </section>
 
       <section title="Context Identifier and VPN prefixes.">
         <t>The context-identifier is an IP address that is either globally
         unique or unique in the private address space of the routing domain.
-        In Egress PE each VPN prefix is assigned to context-identifier. The
+        In Egress PE each VPN prefix is assigned to a context-identifier. The
         granularity of a context identifier is {Egress PE, VPN prefix} tuple.
         However, a given context identifier MAY be assigned to one or multiple
         VPN prefixes.</t>
+		
+		 <t>A given context identifier MUST NOT be used by more than one
+        protected PE. The egress PE that required protection for a VPN prefix
+        MUST set context-identifier as BGP nexthop for VPN-IPv4 and IPv4-Mapped
+        context-identifier for VPN-IPv6. This context-identifier
+        as nexthop indicates to protector that this prefix need protection.
+        For e.g. in topology 1 PE5 (protected PE) advertises VPN prefixes with
+        context-identifier as BGP nexthop. The context identifier MUST also be 
+		advertised in the IGP and in LDP if LDP is used to establish transport LSP.</t>
+		
 
         <t>Possible context identifier assignments are <list style="symbols">
             <t>Unique context-identifier for all VPN prefixes, both VPN-IPv4
@@ -309,35 +341,37 @@
         the last one is finest granularity of a context identifier. While all
         of the above options are possible in principle, their practical usage
         is likely to vary widely, as not all of them may be of practical
-        usage. A given context identifier MUST NOT be used by more than one
-        protected PE. The egress PE that required protection for a VPN prefix
-        MUST set context-identifier as nexthop for VPN-IPv4 and IPv4-Mapped
-        context-identifier for VPN-IPv6 in BGP update. This context-identifier
-        as nexthop indicates to protector that this prefix need protection.
-        For e.g. In topology 1 PE5(protected PE) advertise VPN prefixes with
-        context-identifier as BGP nexthop.</t>
-      </section>
+        usage.</t>
+       </section>
 
-      <section anchor="forwarding" title="Forwarding State on Protector PE">
+	      <section anchor="forwarding" title="Forwarding State on Protector PE">
         <t>A protector maintain the forwarding state in context-specific label
-        spaces on a per protected PE basis. In particular, the protector MUST
-        learn the VPN label by participating the VPN routing and also MUST
-        keep all routes associated with VPN it required to protect.</t>
+        spaces on a per context-Identifier basis. In particular, protector
+        MUST learn VPN labels by participating in VPN routing and MUST keep
+        all routes associated with a VPN that required protection.</t>
 
-        <t>For each VPN label with an associated context-identifier protector
+        <t>For each VPN label with an associated context-identifier, protector
         MUST map the context identifier to a context-specific label space [RFC
         5331], and program the VPN label in that label space in forwarding
         plane. For each VPN prefix that required protection programmed in the
-        forwarding plane with BGP nexthop to alternate egress PE. This VPN
-        label in the context-specific label space identify the layer-3
-        forwarding table that need to lookup to send it alternate egress PE.
-        The protector MAY maintain only VPN prefix originated with-in the
+        forwarding plane with BGP nexthop to alternate egress PE in context
+        VPN table. This VPN label in the context-specific label space identify
+        the layer-3 forwarding table, context VPN table, that need to lookup
+        to send it alternate egress PE.</t>
+
+        <t>The protector MAY maintain only VPN prefix originated with-in the
         multi-homed site for given {egress PE, VPN}. These VPN labels in
-        context table and VPN context table will not be used in forwarding
-        after ingress reroute the traffic to alternative PE. Protector MUST
-        delete VPN label and the VPN context table after ingress reroute the
-        traffic. This shall be achieved with a timer. This timer default value
-        is 180 seconds.</t>
+        context table and context VRF will not be used in forwarding after
+        ingress reroute the traffic to alternative PE. Protector MUST delete
+        VPN label and the VPN context table after ingress reroute the traffic.
+        This shall be achieved with a timer. This timer default value is 180
+        seconds.</t>
+		
+		<t>Note that if the protected PE advertised a label per prefix, as 
+		an optimization, the protector PE does not need to create an IP VPN forwarding table
+		as the MPLS lookup on the VPN label is enough to identify the outgoing 
+		PE and label.</t>
+		
 
         <section title="Alternate egress PE for protected prefix.">
           <t>Any route with BGP nexthop which has the following properties
@@ -352,34 +386,39 @@
       </section>
 
       <section anchor="MPLS-egress-frr" title="MPLS egress Fast reroute">
-        <t>A Protector should able to receive the traffic from PLR in the
-        event of an egress PE failure with forwarding context that enable
-        protector to repair the traffic. </t>
+        <t>A Protector should be able to receive the traffic from PLR in the
+        event of an egress PE failure with forwarding context that enables
+        protector to repair VPN traffic.</t>
 
         <section anchor="RSVP-egress-frr" title="RSVP">
-          <t>If RSVP LSP is used for transport then protector, primary and PLR
-          MUST follow backup egress procedure specified in <xref
-          target="rsvp-egress-frr"/>. So that P router redirects the traffic
-          during primary PE failure.</t>
+          <t>If RSVP LSP is used for transport then protector, primary and
+          MUST follow procedures specified in <xref target="rsvp-egress-frr">
+          </xref>. The context-identifier will be used as destination address
+          of the protected LSP and the protector will be backup egress node of
+          the protected LSP. PLR MUST follow <xref target="rsvp-egress-frr"/>
+          procedure if alias method is used.</t>
         </section>
 
         <section anchor="LDP-egress-frr" title="LDP">
-          <t>If it is LDP LSP then LDP FEC for this LSP MUST be the context
-          identifier of the protected segment. Prefix LFA or remote prefix LFA
-          with node protection can be used for redirect traffic to
-          protector.</t>
+          <t>If LDP is used for transport then LDP FEC MUST be the context
+          identifier. The protector for the context identifier and context
+          label could be learned through IGP which is beyond the scope of the
+          document. The node protecting bypass path could be computed either
+          by remote LFA or LFA for the context identifier to protector. This
+          bypass LSP to protector with context label, learned through IGP,
+          provide forwarding context to protector.</t>
         </section>
       </section>
     </section>
 
     <section anchor="PE_failure" title=" Egress node Failure">
-      <t>This section summarizes the procedures egress protection described
+      <t>This section summarizes the procedure for egress protection described
       above section for completeness. A Egress PE, Protector, PLR follows the
-      methods described in [rsvp-egress-frr]. The protector programs
-      forwarding state in such a way that packets received on the bypass LSP
-      will be forwarded based on VPN label in the context table, and prefix
-      lookup in VPN context table. The context table identified by the UHP
-      label of the bypass LSP, i.e. the context identifier.</t>
+      methods described in <xref target="MPLS-egress-frr"/>. The protector
+      programs forwarding state in such a way that packets received on the
+      bypass LSP will be forwarded based on VPN label in the context table,
+      and prefix lookup in context VPN table. The context table identified by
+      the UHP label of the bypass LSP, i.e. the context identifier.</t>
 
       <t>When the penultimate Hop router receives a VPN packet from the MPLS
       network, if the egress PE is down, the PLR tunnels the packet through
@@ -404,6 +443,67 @@
       alternate egress PE and reach to the site2.</t>
     </section>
 
+	    <section anchor="Deployment" title="Deployement Considerations">
+      
+	     <section title="Discussion on deployment models.">
+    	   
+		<t> As the context-identifiers are advertised in the IGP,
+		they introduce additional states in the network and the forwarding tables.
+		As such, in general, it's desirable to keep their number limited. 
+		The granularity of context-identifier is also related to the protector model used.
+		If a centralized or hybrid protector model is used, a unique context-identifier
+		per egress PE is enough.
+		If a co-located protector model is used, a context identifier
+		per VPN or per CE may be simpler. If one wish to minimize the number of context identifier,
+		one context-identifier per alternative egress PE is the absolute minimum but this comes at 
+		the price of additional BGP route churn when BGP routes from a dual-attached site are newly advertised
+		as the routes from the first PE will first be advertised with the usual BGP Next-Hop and then be re-advertised
+		with the correct context-identifier once the backup PE advertise the same routes.
+		Assuming a site dual-homed to two routers in the same POP/geographic region, the upper bound 
+		is the number of edge routers in the POP/region.</t>
+		
+		<t> The centralized protector model, using a single context identifier per protected PE, limits the number of
+		additional states in the network (IGP, forwarding tables) but may add extra latency during the protection time.
+		It also minimizes the configuration effort as zero configuration is achievable.
+		On the contrary the co-located mode, having a more granualar context identifier, will minimize the latency during 
+		the protection time at the cost of adding more states in the network. It requires more configuration as the service
+		provider will need to defines the PE pairs (protected, protector).
+		The hybrid model is expected to offer the best trade-off as the number of IGP states in the network can be minimized
+		by using a single context identifier per protected PE, while the additional latency
+		can be limited by geographically distributing the protector PE in the network. </t>
+      </section>
+	  
+	     <section title="Simple deployment model.">
+    	
+        <t>We propose the following simple deployment model:  <list style="symbols">
+            <t>a single centralized Protector PE.</t>
+			<t>a single context-identifier per protected PE, with all VPN routes advertised with this context-identifier as BGP next-hop.</t>
+          </list></t>
+		
+		 <t>It provides the following benefits:  <list style="symbols">
+            <t>minimize the number of IGP states in the network. </t>
+			<t>minimize the configuration required: no per VPN nor PE configuration on the protector PE.</t>
+          </list></t>
+		
+		<t> Regarding the IGP states, no additional states is required if the PEs already have multiple loopbacks. Otherwise, one additional loopback per PE need to be advertised. However, the number of loopbacks used as BGP next-hop for the customer traffic is not increased, hence if the routers allows the prioritization of the prefix during FIP update, there is no impact on the IGP convergence time. </t>
+		
+		<t> Regarding the configuration required on the network: <list style="symbols">
+        <t> The protected PE is configured once with an additional loopback which serves as a context identifier. The BGP Next-Hop of the BGP routes are set to this loopback.</t>
+		<t> The centralized protector PE has no per VPN nor per protected PE configuration. It listens to VPN routes. When it sees more than one PE advertising a prefix with the same set of Route Targets, then it creates the context specific label space and advertise the BGP Next-Hops in LDP and in the IGP with a high metric. </t>
+		 </list></t>
+		 
+		<t> If one want to limit the protection to only a subset of VPN or a subset of PE (for marketing reasons, FIB capacities reasons on the protector, forwarding capacity reason during the protection time, for the hybrid model), one may have the protected PE attach a specific community to the routes of such VPN. If the hybrid model is used, on community per protector PE is needed. This is a per VPN configuration on the protected PE when the VPN is provisionned. If the main reason is the forwarding capacity during the protection time, the community can be attached to all dual attached VPN. This usually does not require additional per VPN configuration as typically those dual attached VPN are already tagged for load-balancing requirements. The downside is that both PE loopback are used for trafic forwarding and hence one cannot be de-prioritized during IGP convergence. </t>
+		
+		
+      </section>
+	  
+	   <section title="Deployment requirements.">
+	  
+	  <t>This solution does not require protocol extension on any router. It does not require any feature on any router except the new protector PE. In particular, it does not requires implementation change on ingress nor egress PE, hence works with legacy PE. In most topology, when LDP is used, the PLR will need to support the use of a LDP LSP as a targeted LFA. This is similar to R-LFA but the ability to configure a specific LSP to reach the protector PE may be specific.</t>
+	  	  
+	  </section>
+    </section>
+	
     <section anchor="Security" title="Security Considerations">
       <t>The security considerations discussed in RFC 5036, RFC 5331, RFC
       3209, and RFC 4090 apply to this document.</t>
@@ -413,8 +513,8 @@
       <t>This draft is based on the ideas originally developed by JL Le Roux,
       Bruno Decraene and Zubair Ahmad. This document leverages work done by
       Yakov Rekhter and several others on LSP tail-end protection. Thanks to
-      Nischal Sheth, Nitin Bahadur, Yimin shen and Maciek Konstantynowicz for
-      their contribution.</t>
+      Nischal Sheth, Nitin Bahadur, Yimin shen, Kaliraj Vairavakkalai and
+      Maciek Konstantynowicz for their contribution.</t>
     </section>
   </middle>
 
@@ -422,50 +522,21 @@
     <references title="Normative References">
       &RFC5331;
 
-      <reference anchor="RFC4364">
-        <front>
-          <title>BGP/MPLS IP Virtual Private Networks (VPNs)</title>
+      <?rfc include="reference.RFC.2547"?>
 
-          <author fullname="Y. Rekhter" initials="Y." surname="Rekhter">
-            <organization/>
-          </author>
+      <?rfc include="reference.RFC.4364"?>
 
-          <author fullname="E. Rosen" initials="E." surname="Rosen">
-            <organization/>
-          </author>
+      <?rfc include="reference.RFC.5036"?>
 
-          <date month="February " year="2006"/>
+      <?rfc include="reference.RFC.2205"?>
 
-          <abstract>
-            <t>This document describes a method by which a Service Provider
-            may use an IP backbone to provide IP Virtual Private Networks
-            (VPNs) for its customers. This method uses a "peer model", in
-            which the customers' edge routers (CE routers) send their routes
-            to the Service Provider's edge routers (PE routers); there is no
-            "overlay" visible to the customer's routing algorithm, and CE
-            routers at different sites do not peer with each other. Data
-            packets are tunneled through the backbone, so that the core
-            routers do not need to know the VPN routes.</t>
-          </abstract>
-        </front>
+      <?rfc include="reference.RFC.3209"?>
 
-        <seriesInfo name="RFC" value="4364"/>
+      <?rfc include="reference.RFC.4090"?>
 
-        <format octets="30779"
-                target="http://www.rfc-editor.org/rfc/rfc4364.txt" type="TXT"/>
-      </reference>
+      <?rfc include="reference.RFC.3471"?>
 
-      &RFC5036;
-
-      &RFC2205;
-
-      &RFC3209;
-
-      &RFC4090;
-
-      &RFC3471;
-
-      &RFC3031;
+      <?rfc include="reference.RFC.3031"?>
 
       <reference anchor="LDP-UPSTREAM">
         <front>
@@ -518,63 +589,11 @@
     </references>
 
     <references title="Informative References">
-      &RFC5920;
+      <?rfc include="reference.RFC.5920"?>
 
-      <reference anchor="RFC5286">
-        <front>
-          <title>Basic Specification for IP Fast Reroute: Loop-Free
-          Alternates</title>
+      <?rfc include="reference.RFC.5286"?>
 
-          <author fullname="Alia K. Atlas" initials="A" role="editor"
-                  surname="Atlas">
-            <organization/>
-          </author>
-
-          <author fullname="Alex Zinin" initials="A" role="editor"
-                  surname="Zinin">
-            <organization/>
-          </author>
-
-          <date month="September" year=" 2008"/>
-
-          <abstract>
-            <t>This document describes the use of loop-free alternates to
-            provide local protection for unicast traffic in pure IP and
-            MPLS/LDP networks in the event of a single failure, whether link,
-            node, or shared risk link group (SRLG). The goal of this
-            technology is to reduce the packet loss that happens while routers
-            converge after a topology change due to a failure. Rapid failure
-            repair is achieved through use of precalculated backup next-hops
-            that are loop-free and safe to use until the distributed network
-            convergence process completes. This simple approach does not
-            require any support from other routers. The extent to which this
-            goal can be met by this specification is dependent on the topology
-            of the network.</t>
-          </abstract>
-        </front>
-
-        <seriesInfo name="RFC" value="5920"/>
-
-        <format octets="152830"
-                target="http://www.rfc-editor.org/rfc/rfc5286.txt" type="TXT"/>
-      </reference>
-
-      <reference anchor="RFC5714">
-        <front>
-          <title>IP Fast Reroute Framework</title>
-
-          <author fullname="Mike Shand" initials="M" surname="Shand"/>
-
-          <author fullname="Stewart Bryant" initials="S" surname="Bryant"/>
-
-          <date month="January " year="2010"/>
-        </front>
-
-        <seriesInfo name="RFC" value="5714"/>
-
-        <format octets="152830"
-                target="http://www.rfc-editor.org/rfc/rfc5714.txt" type="TXT"/>
-      </reference>
+      <?rfc include="reference.RFC.5714"?>
 
       <reference anchor="rsvp-egress-frr" target="rsvp egress frr">
         <front>
