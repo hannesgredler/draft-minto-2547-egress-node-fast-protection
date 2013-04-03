@@ -19,7 +19,7 @@
 <?rfc sortrefs="no" ?>
 <?rfc compact="yes" ?>
 <?rfc subcompact="no" ?>
-<rfc category="std" docName="draft-minto-2547-egress-node-fast-protection-00"
+<rfc category="std" docName="draft-minto-2547-egress-node-fast-protection-01"
      ipr="trust200902">
   <front>
     <title>2547 egress PE Fast Failure Protection</title>
@@ -42,27 +42,6 @@
         </postal>
 
         <email>minto@juniper.net</email>
-      </address>
-    </author>
-
-    <author fullname="Maciek Konstantynowicz" initials="M"
-            surname=" Konstantynowicz">
-      <organization>Juniper Networks</organization>
-
-      <address>
-        <postal>
-          <street>1194 N Mathilda Avenue</street>
-
-          <city>Sunnyvale</city>
-
-          <region>CA</region>
-
-          <code>94089</code>
-
-          <country>USA</country>
-        </postal>
-
-        <email>maciek@juniper.net</email>
       </address>
     </author>
 
@@ -90,7 +69,7 @@
       <organization>Juniper Networks</organization>
     </author>
 
-    <date year="2011" />
+    <date day="22" month="oct" year="2012"/>
 
     <area>Routing</area>
 
@@ -175,7 +154,7 @@
       roles and solution.</t>
 
       <figure align="center" anchor="Topology-1">
-        <preamble></preamble>
+        <preamble/>
 
         <artwork align="center">
 
@@ -198,7 +177,7 @@
                   .......................
            </artwork>
 
-        <postamble></postamble>
+        <postamble/>
       </figure>
 
       <t>In Topology-1 two VPNs red and blue with two sites multihomed with
@@ -246,8 +225,8 @@
       target. The other PEs attached to other sites with same VPN import these
       route into VRF creates more than one path to multi-homed sites. When one
       egress PE goes down all VPN traffic towards the multihomed site moved to
-      alternate egress PEs attached to the multi-homed site. This is done by
-      ingress PE. The VPN traffic going via failed PE get dropped in
+      alternate egress PEs attached to the multi-homed site and this is done
+      by ingress PE. The VPN traffic going via failed PE get dropped in
       penultimate hop router until ingress PE reroute VPN traffic. Even though
       connectivity of multi-homed site is not bound to an egress PE the
       transport LSP bind to egress PE. As result of down transport LSP VPN
@@ -308,7 +287,7 @@
         In Egress PE each VPN prefix is assigned to context-identifier. The
         granularity of a context identifier is {Egress PE, VPN prefix} tuple.
         However, a given context identifier MAY be assigned to one or multiple
-        VPN prefix.</t>
+        VPN prefixes.</t>
 
         <t>Possible context identifier assignments are <list style="symbols">
             <t>Unique context-identifier for all VPN prefixes, both VPN-IPv4
@@ -332,73 +311,11 @@
         is likely to vary widely, as not all of them may be of practical
         usage. A given context identifier MUST NOT be used by more than one
         protected PE. The egress PE that required protection for a VPN prefix
-        MUST put context-identifier as nexthop in BGP update. This
-        context-identifier as nexthop indicates to protector that this prefix
-        need protection. For e.g. In topology 1 PE5(protected PE) advertise
-        VPN prefixes with context-identifier as BGP nexthop.</t>
-      </section>
-
-      <section anchor="context_id"
-               title="Context Identifier Advertisement by IGP">
-        <t>IGP MUST advertise context identifiers to allow computation of TE
-        paths for bypass LSPs and VPN transport LSPs that are destined for
-        context identifiers. Context identifiers MUST be advertised a stub
-        router in IGP and TE. Advertised as a stub router allow operator to
-        deploy egress protection without upgrading all P routers.</t>
-
-        <t>A protected PE MUST advertise a context identifier as a stub router
-        to TE domain and in IGP. Also Protected PE MUST advertise a link to
-        the stub router.</t>
-
-        <t>A protector MUST advertise link to stub router advertised by
-        protected PE in IGP and TE.</t>
-
-        <section title="Context-identifier advertised as stub router. ">
-          <t>Context-identifier advertised as stub router required two parts.
-          A node representation (context-node) and links to the node. The
-          protected PE and protector advertise link to context-node and
-          protected PE advertise context-node.</t>
-
-          <t>The protected PE will advertise context-node in to IGP. The
-          router-id of the context-node is context-identifier. The system-ID
-          is derived from the context-identifier with BCD encoding. The
-          resulting system-ID MUST be unique with in IGP routing domain.
-          Context-node advertised with two unnumbered transit links with MAX
-          routable link metric to protected PE and protector. For TE these
-          unnumbered links advertised with zero bandwidth and MAX TE metric.
-          Other TE characteristic of TE links could be configured to
-          advertise. The router-ID or system-ID of the protector could be
-          dynamically learned from the IGP link state database or could be
-          configured in protected PE.</t>
-
-          <t>Protected PE MUST advertise unnumbered transit link with metric 1
-          and TE metric 1 to context-node. Protector MUST advertise unnumbered
-          transit link with maximum routable link metric and maximum TE metric
-          to the context-node. Other TE characteristic of the links could be
-          configured and advertised in to TE.</t>
-
-          <section title="ISIS context-node ">
-            <t>Only zeroth fragment of the context-node is only valid. All
-            Other fragments SHOULD be ignored. Zeroth fragment MUST include
-            area address TLV and MAY include hostname TLV.</t>
-
-            <t>The set of area addresses advertised MUST be a subset of the
-            set of Area Addresses advertised in the protected LSP number zero
-            at the corresponding level. Preferably, the advertisement SHOULD
-            be syntactically identical to that included in the normal LSP
-            number zero at the corresponding level. The hostname could be set
-            as &lt;context-identifier+ protected PE hostname&gt;.</t>
-
-            <t>The Overload (OL) MUST be set to 1. The Attached (ATT), and
-            Partition Repair (P) bits MUST be set to 0.</t>
-          </section>
-
-          <section title="OSPF context-node">
-            <t>The advertising router and Link State ID of router LSA MUST be
-            context-identifier. All options bits in router LSA MUST be set to
-            zero. The number of links MUST be 2.</t>
-          </section>
-        </section>
+        MUST set context-identifier as nexthop for VPN-IPv4 and IPv4-Mapped
+        context-identifier for VPN-IPv6 in BGP update. This context-identifier
+        as nexthop indicates to protector that this prefix need protection.
+        For e.g. In topology 1 PE5(protected PE) advertise VPN prefixes with
+        context-identifier as BGP nexthop.</t>
       </section>
 
       <section anchor="forwarding" title="Forwarding State on Protector PE">
@@ -427,59 +344,42 @@
           <list>
               <t>Exact matching route-target set (RD may be different)</t>
 
-              <t>Exact matching Prefix part (not RD)</t>
+              <t>Exact matching Prefix part (excluding the RD)</t>
             </list></t>
 
           <t>will be eligible as alternate egress PE for prefix.</t>
         </section>
       </section>
 
-      <section anchor="bypass" title="Bypass LSP">
-        <t>An LSP MUST be either manually or automatically provisioned on a
-        PLR to enable the PLR to send traffic to a protector, in the event of
-        an egress PE failure. This LSP is referred to as a bypass LSP. The
-        bypass LSP MUST be a LSP with ultimate hop popping (UHP) [RFC 3031].
-        That is, the protector MUST assign an un-reserved label to the bypass
-        LSP. When the protector PE receives VPN packets on the bypass LSP from
-        a PLR, it MUST rely on the bypass LSP's UHP label to determine the
-        context-specific label space to forward the packets.</t>
+      <section anchor="MPLS-egress-frr" title="MPLS egress Fast reroute">
+        <t>A Protector should able to receive the traffic from PLR in the
+        event of an egress PE failure with forwarding context that enable
+        protector to repair the traffic. </t>
 
-        <section anchor="rsvp_bypass"
-                 title="RSVP-TE Signaled Bypass LSP and Backup LSP">
-          <t>If a bypass LSP is an RSVP-TE signaled LSP, its destination MUST
-          be the context identifier of the protected VPN prefix. The path
-          taken by the bypass LSP MAY be statically configured or dynamically
-          computed by CSPF. The signaling of the bypass LSP MUST be triggered
-          by the "local protection desired" and "node protection desired" bits
-          in SESSION_ATTRIBUTE of Path message of the transport LSP [RFC 2205,
-          RFC 3209, RFC 4090]. After the bypass LSP is established, the PLR
-          MUST set the "local protection available" and "node protection" bits
-          in RRO of Resv message of the transport LSP. The protector MUST
-          terminate the backup LSP as an egress. Once the local repair takes
-          effect, the PLR MUST set the "local protection in use" bit in RRO of
-          Resv message of the transport LSP.</t>
+        <section anchor="RSVP-egress-frr" title="RSVP">
+          <t>If RSVP LSP is used for transport then protector, primary and PLR
+          MUST follow backup egress procedure specified in <xref
+          target="rsvp-egress-frr"/>. So that P router redirects the traffic
+          during primary PE failure.</t>
         </section>
 
-        <section anchor="ldp_bypass" title="LDP Signaled Bypass LSP">
+        <section anchor="LDP-egress-frr" title="LDP">
           <t>If it is LDP LSP then LDP FEC for this LSP MUST be the context
-          identifier of the protected segment. Prefix LFA with node protection
-          can be used for bypass LSP computation.</t>
+          identifier of the protected segment. Prefix LFA or remote prefix LFA
+          with node protection can be used for redirect traffic to
+          protector.</t>
         </section>
       </section>
     </section>
 
-    <section anchor="link_failure" title=" Egress node Failure">
+    <section anchor="PE_failure" title=" Egress node Failure">
       <t>This section summarizes the procedures egress protection described
-      above section for completeness. A Egress PE and a protector both
-      advertise the context identifier of a protected prefixes in IGP as a
-      stub link or stub router, with the egress PE advertising a lower metric
-      and protector with maximum metric. The PLR establishes a UHP bypass LSP
-      to the protector. The destination address of the bypass LSP is the
-      context identifier. The protector programs forwarding state in such a
-      way that packets received on the bypass LSP will be forwarded based on
-      VPN label in the context table, and prefix lookup in VPN context table.
-      The context table identified by the UHP label of the bypass LSP, i.e.
-      the context identifier.</t>
+      above section for completeness. A Egress PE, Protector, PLR follows the
+      methods described in [rsvp-egress-frr]. The protector programs
+      forwarding state in such a way that packets received on the bypass LSP
+      will be forwarded based on VPN label in the context table, and prefix
+      lookup in VPN context table. The context table identified by the UHP
+      label of the bypass LSP, i.e. the context identifier.</t>
 
       <t>When the penultimate Hop router receives a VPN packet from the MPLS
       network, if the egress PE is down, the PLR tunnels the packet through
@@ -510,9 +410,11 @@
     </section>
 
     <section anchor="ack" title="Acknowledgements">
-      <t>This document leverages work done by Yakov Rekhter and several others
-      on LSP tail-end protection. Thanks to Nischal Sheth, Nitin Bahadur,
-      Yimin shen for their contribution.</t>
+      <t>This draft is based on the ideas originally developed by JL Le Roux,
+      Bruno Decraene and Zubair Ahmad. This document leverages work done by
+      Yakov Rekhter and several others on LSP tail-end protection. Thanks to
+      Nischal Sheth, Nitin Bahadur, Yimin shen and Maciek Konstantynowicz for
+      their contribution.</t>
     </section>
   </middle>
 
@@ -525,14 +427,14 @@
           <title>BGP/MPLS IP Virtual Private Networks (VPNs)</title>
 
           <author fullname="Y. Rekhter" initials="Y." surname="Rekhter">
-            <organization></organization>
+            <organization/>
           </author>
 
           <author fullname="E. Rosen" initials="E." surname="Rosen">
-            <organization></organization>
+            <organization/>
           </author>
 
-          <date month="February " year="2006" />
+          <date month="February " year="2006"/>
 
           <abstract>
             <t>This document describes a method by which a Service Provider
@@ -547,10 +449,10 @@
           </abstract>
         </front>
 
-        <seriesInfo name="RFC" value="4364" />
+        <seriesInfo name="RFC" value="4364"/>
 
         <format octets="30779"
-                target="http://www.rfc-editor.org/rfc/rfc4364.txt" type="TXT" />
+                target="http://www.rfc-editor.org/rfc/rfc4364.txt" type="TXT"/>
       </reference>
 
       &RFC5036;
@@ -578,13 +480,13 @@
             <organization>France Telecom</organization>
           </author>
 
-          <date year="2011" />
+          <date year="2011"/>
         </front>
 
-        <seriesInfo name="Internet-Draft" value="draft-ietf-mpls-ldp-upstream" />
+        <seriesInfo name="Internet-Draft" value="draft-ietf-mpls-ldp-upstream"/>
 
         <format target="http://tools.ietf.org/html/draft-ietf-mpls-ldp-upstream-10"
-                type="TXT" />
+                type="TXT"/>
       </reference>
 
       <reference anchor="RSVP-NON-PHP-OOB">
@@ -604,14 +506,14 @@
             <organization>Juniper Networks</organization>
           </author>
 
-          <date year="2011" />
+          <date year="2011"/>
         </front>
 
         <seriesInfo name="Internet-Draft"
-                    value="draft-ietf-mpls-rsvp-te-no-php-oob-mapping" />
+                    value="draft-ietf-mpls-rsvp-te-no-php-oob-mapping"/>
 
         <format target="http://tools.ietf.org/html/draft-ietf-mpls-rsvp-te-no-php-oob-mapping-07"
-                type="TXT" />
+                type="TXT"/>
       </reference>
     </references>
 
@@ -625,15 +527,15 @@
 
           <author fullname="Alia K. Atlas" initials="A" role="editor"
                   surname="Atlas">
-            <organization></organization>
+            <organization/>
           </author>
 
           <author fullname="Alex Zinin" initials="A" role="editor"
                   surname="Zinin">
-            <organization></organization>
+            <organization/>
           </author>
 
-          <date month="September" year=" 2008" />
+          <date month="September" year=" 2008"/>
 
           <abstract>
             <t>This document describes the use of loop-free alternates to
@@ -651,27 +553,48 @@
           </abstract>
         </front>
 
-        <seriesInfo name="RFC" value="5920" />
+        <seriesInfo name="RFC" value="5920"/>
 
         <format octets="152830"
-                target="http://www.rfc-editor.org/rfc/rfc5286.txt" type="TXT" />
+                target="http://www.rfc-editor.org/rfc/rfc5286.txt" type="TXT"/>
       </reference>
 
       <reference anchor="RFC5714">
         <front>
           <title>IP Fast Reroute Framework</title>
 
-          <author fullname="Mike Shand" initials="M" surname="Shand"></author>
+          <author fullname="Mike Shand" initials="M" surname="Shand"/>
 
-          <author fullname="Stewart Bryant" initials="S" surname="Bryant"></author>
+          <author fullname="Stewart Bryant" initials="S" surname="Bryant"/>
 
-          <date month="January " year="2010" />
+          <date month="January " year="2010"/>
         </front>
 
-        <seriesInfo name="RFC" value="5714" />
+        <seriesInfo name="RFC" value="5714"/>
 
         <format octets="152830"
-                target="http://www.rfc-editor.org/rfc/rfc5714.txt" type="TXT" />
+                target="http://www.rfc-editor.org/rfc/rfc5714.txt" type="TXT"/>
+      </reference>
+
+      <reference anchor="rsvp-egress-frr" target="rsvp egress frr">
+        <front>
+          <title>IP Fast Reroute Framework</title>
+
+          <author fullname="Jeyananth Minto Jeganathan" initials="J"
+                  surname="Jeganathan"/>
+
+          <author fullname="Hannes Gredler" initials="H" surname="Gredler"/>
+
+          <author fullname="Yimin Shen" initials="Y" surname="Shen"/>
+
+          <date month="Oct " year="2012"/>
+        </front>
+
+        <seriesInfo name="Internet-Draft"
+                    value="draft-minto-rsvp-lsp-egress-fast-protection-01"/>
+
+        <format target="http://tools.ietf.org/html/draft-minto-rsvp-lsp-egress-fast-protection-01"
+                type="TXT"/>
       </reference>
     </references>
   </back>
