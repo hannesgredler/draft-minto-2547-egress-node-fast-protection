@@ -113,10 +113,10 @@
   <middle>
     <section title="Introduction">
       <t>This document specifies a fast-protection mechanism for protecting
-      RFC 2547 based VPN against egress PE failure. The procedures in this
+      <xref target="RFC2547"/> based VPN against egress PE failure. The procedures in this
       document are relevant only when a VPN site is multi-homed to two or more
       PEs. This is mainly designed based on MPLS context specific label
-      switching<xref target="RFC5331"/>. This fast-protection refers to the
+      switching <xref target="RFC5331"/>. This fast-protection refers to the
       ability to provide local repair upon a failure in the order of tens of
       milliseconds, which is comparable to MPLS fast-reroute <xref
       target="RFC4090"/>. This fast-protection is achieved by establishing
@@ -393,10 +393,10 @@
 
         <section anchor="RSVP-egress-frr" title="RSVP">
           <t>If RSVP LSP is used for transport then protector and primary MUST
-          follow procedures specified in <xref target="rsvp-egress-frr">
+          follow procedures specified in <xref target="I-D.minto-rsvp-lsp-egress-fast-protection">
           </xref>. The context-identifier will be used as destination address
           of the protected LSP and the protector will be backup egress node of
-          the protected LSP. PLR MUST follow <xref target="rsvp-egress-frr"/>
+          the protected LSP. PLR MUST follow <xref target="I-D.minto-rsvp-lsp-egress-fast-protection"/>
           procedure if alias method is used.</t>
         </section>
 
@@ -421,8 +421,8 @@
         prefixes by participating in VPN routing and MUST keep routes and
         labels associated with VPN(s) site(s) that required protection. For
         each VPN label with an associated context-identifier, the protector MUST
-        map the context identifier to a context-specific label space [RFC
-        5331], and programs the VPN label in that label space into its forwarding
+        map the context identifier to a context-specific label space
+	<xref target="RFC5331"/>, and programs the VPN label in that label space into its forwarding
         plane. The VPN label in the context-specific label space identifies the
         layer-3 forwarding table and context VPN table, that need to be looked up to
         send it alternate egress PE.</t>
@@ -581,8 +581,12 @@
     </section>
 
     <section anchor="Security" title="Security Considerations">
-      <t>The security considerations discussed in RFC 5036, RFC 5331, RFC
-      3209, and RFC 4090 apply to this document.</t>
+      <t>The security considerations discussed in
+      <xref target="RFC5036"/>, 
+      <xref target="RFC5331"/>, 
+      <xref target="RFC3209"/> and
+      <xref target="RFC4090"/>
+      apply to this document.</t>
     </section>
 
     <section anchor="ack" title="Acknowledgements">
@@ -596,101 +600,22 @@
 
   <back>
     <references title="Normative References">
-      &RFC5331;
-
-      <?rfc include="reference.RFC.2547"?>
-
-      <?rfc include="reference.RFC.4364"?>
-
-      <?rfc include="reference.RFC.5036"?>
-
       <?rfc include="reference.RFC.2205"?>
-
-      <?rfc include="reference.RFC.3209"?>
-
-      <?rfc include="reference.RFC.4090"?>
-
-      <?rfc include="reference.RFC.3471"?>
-
+      <?rfc include="reference.RFC.2547"?>
       <?rfc include="reference.RFC.3031"?>
-
-      <reference anchor="LDP-UPSTREAM">
-        <front>
-          <title>MPLS Upstream Label Assignment for LDP</title>
-
-          <author fullname="Rahul Aggarwal" initials="R" surname="Aggarwal">
-            <organization>Juniper Networks</organization>
-          </author>
-
-          <author fullname="Jean-Louis Le Roux" initials="J. L. Le"
-                  surname="Roux">
-            <organization>France Telecom</organization>
-          </author>
-
-          <date year="2011"/>
-        </front>
-
-        <seriesInfo name="Internet-Draft" value="draft-ietf-mpls-ldp-upstream"/>
-
-        <format target="http://tools.ietf.org/html/draft-ietf-mpls-ldp-upstream-10"
-                type="TXT"/>
-      </reference>
-
-      <reference anchor="RSVP-NON-PHP-OOB">
-        <front>
-          <title>Non PHP Behavior and out-of-band mapping for RSVP-TE
-          LSPs</title>
-
-          <author fullname="Zafar Ali" initials="A" surname="Ali">
-            <organization>Cisco Systems, Inc</organization>
-          </author>
-
-          <author fullname="George Swallow" initials="Z" surname="Swallow">
-            <organization>Cisco Systems, Inc</organization>
-          </author>
-
-          <author fullname="Rahul Aggarwal" initials="R" surname="Aggarwal">
-            <organization>Juniper Networks</organization>
-          </author>
-
-          <date year="2011"/>
-        </front>
-
-        <seriesInfo name="Internet-Draft"
-                    value="draft-ietf-mpls-rsvp-te-no-php-oob-mapping"/>
-
-        <format target="http://tools.ietf.org/html/draft-ietf-mpls-rsvp-te-no-php-oob-mapping-07"
-                type="TXT"/>
-      </reference>
+      <?rfc include="reference.RFC.3209"?>
+      <?rfc include="reference.RFC.3471"?>
+      <?rfc include="reference.RFC.4090"?>
+      <?rfc include="reference.RFC.4364"?>
+      <?rfc include="reference.RFC.5036"?>
+      <?rfc include="reference.RFC.5331"?>
     </references>
 
     <references title="Informative References">
       <?rfc include="reference.RFC.5920"?>
-
       <?rfc include="reference.RFC.5286"?>
-
       <?rfc include="reference.RFC.5714"?>
-
-      <reference anchor="rsvp-egress-frr" target="rsvp egress frr">
-        <front>
-          <title>IP Fast Reroute Framework</title>
-
-          <author fullname="Jeyananth Minto Jeganathan" initials="J"
-                  surname="Jeganathan"/>
-
-          <author fullname="Hannes Gredler" initials="H" surname="Gredler"/>
-
-          <author fullname="Yimin Shen" initials="Y" surname="Shen"/>
-
-          <date month="Oct " year="2012"/>
-        </front>
-
-        <seriesInfo name="Internet-Draft"
-                    value="draft-minto-rsvp-lsp-egress-fast-protection-01"/>
-
-        <format target="http://tools.ietf.org/html/draft-minto-rsvp-lsp-egress-fast-protection-01"
-                type="TXT"/>
-      </reference>
+      <?rfc include="reference.I-D.draft-minto-rsvp-lsp-egress-fast-protection-01.xml"?>
     </references>
   </back>
 </rfc>
